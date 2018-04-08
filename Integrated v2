@@ -1,0 +1,138 @@
+//this code sends data collected from a temperature sensor 
+//and a photoresistor and sends it to thingspeak using a wifi
+//module. 
+//This code was the product of 
+//Brandon Peek and Conor Vogt
+
+float voltagetemp;
+String apikey = "15C451V2V2935TSZ";         //api key
+String host = String("Host: api.thingspeak.com"); //still part of get command
+String start = String("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80");//starts the TCP connection to thingspeak through the wifi module
+float temp;         //analog values from the temperature sensor
+float lightLevel;       //analog values from the resistor in series with the photoresistor
+float voltz;        //voltage value, in mV across the resistor
+int photoVolt;      //converts float value "voltz" to an integer value
+char close [] = "CLOSED";       //string "CLOSED" which the wifi module outputs when a connection has been closed
+const int numReadings = 20;     // number of readings of the temperature value
+
+int val1[numReadings];      // the readings from the analog input
+int readIndex = 0;        // the index of the current reading
+int total=0;               // the running total
+int average= 0;             //running average of the temperature values
+float valC;                 //the degrees in celsius
+
+
+  void setup() {
+  Serial1.begin(115200); //initializes the serial1 ports
+  Serial.begin(9600);   //serial output for debugging purposes 
+  pinMode(6,INPUT);     //Temp. sensor input
+  pinMode(2, INPUT);    //photoresistor input
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) { //sets the array of farenheit values to zero
+      val1[thisReading] = 0;
+    }
+  }
+
+
+
+
+void loop() {
+
+    for(readIndex; readIndex<=numReadings; readIndex++){ 
+
+        temp=analogRead(6);
+
+                   voltagetemp = temp * (3.0/1023.0); //converts analog values to voltage
+
+               valC = voltagetemp * (100.0); //changes voltage to temperature, conversion from data sheet
+
+               val1[readIndex]= (valC * 1.8)+32; //farenheit conversion from celsius
+
+               total += val1[readIndex]; //adds each successive value at the index in the for loop to the running total
+
+    }
+
+        average = (total/numReadings) -5; //running average of the temperature
+        //-5 is added for calibration purposes
+
+        readIndex = 0; //sets the readIndex back to zero
+
+       lightLevel = analogRead(2); // Read the light level from analog pin 2
+
+       delay(1); // delay for 1 millisecond for smoothness
+
+       voltz = (lightLevel * (3.3/1023.0))*1000;
+
+       photoVolt = voltz;
+
+
+
+
+       String get = String("GET /update?api_key=")+String(apikey)+String("&field1=")+String(average)+String("&field2=")+String(photoVolt); //get command
+             delay(100); //10ms second delay to start, allows the wifi module to setup if needed
+
+     Serial1.println(start); //sends the start command to the wifi module
+             delay(200); //20ms second delay so the wifi chip does not get overwhelmed
+
+     String bytes = String("AT+CIPSEND=")+String(get.length()+3);//tells wifi module how many bytes will be sent
+
+     Serial1.println(bytes); //sends the bytes command to the wifi module
+             delay(100);//lots of delays..
+
+     Serial1.println(get);//sends the get command with the data to the server
+             delay(100);
+
+    Serial1.println(host);//sends the host string to server
+
+    Serial1.println();//space
+
+    Serial1.println();//space
+
+
+    for(readIndex;readIndex<=numReadings; readIndex++){
+        val1[readIndex] = 0; //resets the array back to zero for all index values so it can be refilled with new values
+    }
+    if(readIndex>=numReadings){
+        readIndex=0; //sets the index back to zero
+        total=0; //resets the running total
+    }
+
+  /*
+   * For debugging purposes, the code checks whether there is an error code or not.
+   * If the serial.find function finds the string "CLOSED" then then the code is delayed, 
+   * if not, then the serial.find function looks for the "SEND OK" just to confirm that the 
+   * data was sent. If That is false, then the wifi module gets reset and reconnected to the 
+   * wifi network. 
+   */
+    
+    if(Serial1.find(close)== TRUE){
+        Serial.println("Data Sent :)");
+        Serial1.flush(); //clears the serial buffer before the loop runs again
+        delay(300000); // 5 minute delay between loops
+
+    }
+    else{
+        if(Serial1.find("SEND OK")==TRUE){
+            Serial.print("Data sent, other possible error encountered");
+        }
+  while(Serial1.find("ERROR")){
+      Serial1.println("AT");
+      if(Serial1.find("OK")==TRUE){
+
+          Serial1.flush(); //clears the serial buffer, this way no strings from previous serial outputs are read
+          Serial1.println("AT+RST");
+
+      }
+      if(Serial1.find("OK")==TRUE){
+
+          Serial1.flush(); //clears the serial buffer, this way no strings from previous serial outputs are read
+          Serial1.println("AT+CWMODE=1");
+
+      }
+      if(Serial1.find("+CWMODE=1")&&Serial1.find("OK")==TRUE){
+
+          Serial1.flush(); //clears the serial buffer, this way no strings from previous serial outputs are read
+          Serial1.println("AT+CWJAP=\"bucknell_iot\",\"\"");
+      }
+      }
+  } //the loop runs again and hopefully no more errors present themselves. 
+}
