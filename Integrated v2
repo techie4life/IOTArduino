@@ -1,7 +1,7 @@
-//this code sends data collected from a temperature sensor 
+//this code sends data collected from a temperature sensor
 //and a photoresistor and sends it to thingspeak using a wifi
-//module. 
-//This code was the product of 
+//module.
+//This code was the product of
 //Brandon Peek and Conor Vogt
 
 float voltagetemp;
@@ -13,7 +13,7 @@ float lightLevel;       //analog values from the resistor in series with the pho
 float voltz;        //voltage value, in mV across the resistor
 int photoVolt;      //converts float value "voltz" to an integer value
 char close [] = "CLOSED";       //string "CLOSED" which the wifi module outputs when a connection has been closed
-const int numReadings = 20;     // number of readings of the temperature value
+const int numReadings = 200;     // number of readings of the temperature value
 
 int val1[numReadings];      // the readings from the analog input
 int readIndex = 0;        // the index of the current reading
@@ -24,7 +24,7 @@ float valC;                 //the degrees in celsius
 
   void setup() {
   Serial1.begin(115200); //initializes the serial1 ports
-  Serial.begin(9600);   //serial output for debugging purposes 
+  Serial.begin(9600);   //serial output for debugging purposes
   pinMode(6,INPUT);     //Temp. sensor input
   pinMode(2, INPUT);    //photoresistor input
   for (int thisReading = 0; thisReading < numReadings; thisReading++) { //sets the array of farenheit values to zero
@@ -37,7 +37,7 @@ float valC;                 //the degrees in celsius
 
 void loop() {
 
-    for(readIndex; readIndex<=numReadings; readIndex++){ 
+    for(readIndex; readIndex<=numReadings; readIndex++){
 
         temp=analogRead(6);
 
@@ -98,41 +98,42 @@ void loop() {
 
   /*
    * For debugging purposes, the code checks whether there is an error code or not.
-   * If the serial.find function finds the string "CLOSED" then then the code is delayed, 
-   * if not, then the serial.find function looks for the "SEND OK" just to confirm that the 
-   * data was sent. If That is false, then the wifi module gets reset and reconnected to the 
-   * wifi network. 
+   * If the serial.find function finds the string "CLOSED" then then the code is delayed,
+   * if not, then the serial.find function looks for the "SEND OK" just to confirm that the
+   * data was sent. If That is false, then the wifi module gets reset and reconnected to the
+   * wifi network.
    */
-    
-    if(Serial1.find(close)== TRUE){
+
+    if(Serial1.find(close)== TRUE||Serial1.find("SEND OK")){
         Serial.println("Data Sent :)");
         Serial1.flush(); //clears the serial buffer before the loop runs again
-        delay(300000); // 5 minute delay between loops
+        delay(30000); // 5 minute delay between loops
 
     }
-    else{
-        if(Serial1.find("SEND OK")==TRUE){
-            Serial.print("Data sent, other possible error encountered");
-        }
+
   while(Serial1.find("ERROR")){
       Serial1.println("AT");
+      delay(500);
       if(Serial1.find("OK")==TRUE){
 
           Serial1.flush(); //clears the serial buffer, this way no strings from previous serial outputs are read
           Serial1.println("AT+RST");
+          delay(1000);
 
       }
       if(Serial1.find("OK")==TRUE){
 
           Serial1.flush(); //clears the serial buffer, this way no strings from previous serial outputs are read
           Serial1.println("AT+CWMODE=1");
+          delay(500);
 
       }
       if(Serial1.find("+CWMODE=1")&&Serial1.find("OK")==TRUE){
-
+          delay(500);
           Serial1.flush(); //clears the serial buffer, this way no strings from previous serial outputs are read
           Serial1.println("AT+CWJAP=\"bucknell_iot\",\"\"");
+          delay(2000);
       }
       }
-  } //the loop runs again and hopefully no more errors present themselves. 
-}
+  } //the loop runs again and hopefully no more errors present themselves.
+
