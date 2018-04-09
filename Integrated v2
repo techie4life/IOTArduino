@@ -107,7 +107,7 @@ void loop() {
     if(Serial1.find(close)== TRUE||Serial1.find("SEND OK")){
         Serial.println("Data Sent :)");
         Serial1.flush(); //clears the serial buffer before the loop runs again
-        delay(30000); // 5 minute delay between loops
+        delay(300000); // 5 minute delay between loops
 
     }
 
