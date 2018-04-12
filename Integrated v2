@@ -5,7 +5,7 @@
 //Brandon Peek and Conor Vogt
 
 float voltagetemp;
-String apikey = "15C451V2V2935TSZ";         //api key
+String apikey = "WGFUPRQPPTKL7HN9";         //api key
 String host = String("Host: api.thingspeak.com"); //still part of get command
 String start = String("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80");//starts the TCP connection to thingspeak through the wifi module
 float temp;         //analog values from the temperature sensor
@@ -67,7 +67,7 @@ void loop() {
 
 
 
-       String get = String("GET /update?api_key=")+String(apikey)+String("&field1=")+String(average)+String("&field2=")+String(photoVolt); //get command
+       String get = String("GET /update?api_key=")+String(apikey)+String("&field1=")+String("cbv002")+String("&field2=")+String(average)+String("&field3=")+String(photoVolt); //get command
              delay(100); //10ms second delay to start, allows the wifi module to setup if needed
 
      Serial1.println(start); //sends the start command to the wifi module
