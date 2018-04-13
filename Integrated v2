@@ -67,7 +67,7 @@ void loop() {
 
 
 
-       String get = String("GET /update?api_key=")+String(apikey)+String("&field1=")+String("cbv002")+String("&field2=")+String(average)+String("&field3=")+String(photoVolt); //get command
+       String get = String("GET /update?api_key=")+String(apikey)+String("&field1=")+String("cbv002")+String("&field2=")+String(photoVolt)+String("&field3=")+String(average); //get command
              delay(100); //10ms second delay to start, allows the wifi module to setup if needed
 
      Serial1.println(start); //sends the start command to the wifi module
